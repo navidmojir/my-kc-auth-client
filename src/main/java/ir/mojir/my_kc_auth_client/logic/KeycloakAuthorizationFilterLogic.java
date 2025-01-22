@@ -1,7 +1,7 @@
 package ir.mojir.my_kc_auth_client.logic;
 
 import java.io.IOException;
-import java.nio.file.AccessDeniedException;
+import org.springframework.security.access.AccessDeniedException;
 
 import ir.mojir.my_kc_auth_client.exceptions.KeycloakAuthorizationClientException;
 import ir.mojir.my_kc_auth_client.external.KeycloakAuthorizationClient;
