@@ -39,6 +39,9 @@ public class KeycloakAuthorizationFilterLogic {
 		if(client == null)
 			throw new KeycloakAuthorizationClientException("initialize method must be called first", null);
 		
+		if(req.getHeader("Authorization") == null)
+			throw new AccessDeniedException("403");
+		
 		String accessToken = req.getHeader("Authorization").replaceAll("(?i)bearer ", "");
 			
 		boolean authorized = client.authorize(accessToken,
