@@ -15,7 +15,6 @@ public class KeycloakAuthorizationClientException extends ServiceException{
 
 	@Override
 	public HttpStatus getHttpStatus() {
-		// TODO Auto-generated method stub
 		return HttpStatus.INTERNAL_SERVER_ERROR;
 	}
 

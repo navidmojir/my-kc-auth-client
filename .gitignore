@@ -1,2 +1,3 @@
 
 /target
+target/classes/ir/mojir/my_kc_auth_client/exceptions/KeycloakAuthorizationClientException.class

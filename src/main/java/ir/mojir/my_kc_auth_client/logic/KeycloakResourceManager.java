@@ -3,6 +3,8 @@ package ir.mojir.my_kc_auth_client.logic;
 import java.util.Map;
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.method.HandlerMethod;
@@ -14,7 +16,7 @@ import ir.mojir.my_kc_auth_client.external.KeycloakAuthorizationClient;
 //@Component
 public class KeycloakResourceManager {
 
-//	private final static Logger logger = LoggerFactory.getLogger(KeycloakResourceManager.class);
+	private final static Logger logger = LoggerFactory.getLogger(KeycloakResourceManager.class);
 	
 //	@Autowired 
 	private ApplicationContext applicationContext = null;
@@ -46,6 +48,7 @@ public class KeycloakResourceManager {
 //	@PostConstruct
 	public void createResourcesInKeycloak() {
 		
+		logger.info("Trying to create resources in keycloak for the client");
 		RequestMappingHandlerMapping requestMappingHandlerMapping = applicationContext
 		        .getBean("requestMappingHandlerMapping", RequestMappingHandlerMapping.class);
 		    Map<RequestMappingInfo, HandlerMethod> map = requestMappingHandlerMapping

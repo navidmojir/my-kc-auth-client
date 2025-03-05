@@ -1,6 +1,9 @@
 package ir.mojir.my_kc_auth_client.logic;
 
 import java.io.IOException;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.access.AccessDeniedException;
 
 import ir.mojir.my_kc_auth_client.exceptions.KeycloakAuthorizationClientException;
@@ -10,6 +13,9 @@ import jakarta.servlet.http.HttpServletResponse;
 
 //@Component
 public class KeycloakAuthorizationFilterLogic {
+	
+	private static final Logger logger = LoggerFactory.getLogger(KeycloakAuthorizationFilterLogic.class);
+	
 //	@Autowired
 //	private ParameterService params;
 	
@@ -40,10 +46,12 @@ public class KeycloakAuthorizationFilterLogic {
 			throw new KeycloakAuthorizationClientException("initialize method must be called first", null);
 		
 		if(req.getHeader("Authorization") == null)
-			throw new AccessDeniedException("403");
+			throw new KeycloakAuthorizationClientException("Authorization header was not found in the request", null);
 		
 		String accessToken = req.getHeader("Authorization").replaceAll("(?i)bearer ", "");
-			
+		
+		logger.trace("trying to authorize request with uri '{}' and method '{}' with access token '{}'", req.getRequestURI(), 
+				req.getMethod(), accessToken);
 		boolean authorized = client.authorize(accessToken,
 				req.getRequestURI(), req.getMethod());
 		
