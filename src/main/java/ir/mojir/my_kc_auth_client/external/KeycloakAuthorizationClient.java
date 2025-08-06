@@ -4,6 +4,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import ir.mojir.my_kc_auth_client.config.KeycloakConfiguration;
+import jakarta.annotation.PostConstruct;
 import org.keycloak.authorization.client.AuthorizationDeniedException;
 import org.keycloak.authorization.client.AuthzClient;
 import org.keycloak.authorization.client.Configuration;
@@ -16,20 +18,39 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ir.mojir.my_kc_auth_client.exceptions.KeycloakAuthorizationClientException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
+@Component
 public class KeycloakAuthorizationClient {
 
 	private final static Logger logger = LoggerFactory.getLogger(KeycloakAuthorizationClient.class);
 	
 	private Configuration config = new Configuration();
 	
-	public KeycloakAuthorizationClient(String realm, String authServerUrl, String clientId, String clientSecret) {
-		config.setRealm(realm);
-		config.setAuthServerUrl(authServerUrl);
-		config.setResource(clientId);
+//	public KeycloakAuthorizationClient(String realm, String authServerUrl, String clientId, String clientSecret) {
+//		config.setRealm(realm);
+//		config.setAuthServerUrl(authServerUrl);
+//		config.setResource(clientId);
+//		Map<String, Object> cred = new HashMap<>();
+//		cred.put("secret", clientSecret);
+//		config.setCredentials(cred);
+//	}
+
+	@Autowired
+	private KeycloakConfiguration params;
+
+	@PostConstruct
+	private void initConfig() {
+		config.setRealm(params.getKcRealm());
+		config.setAuthServerUrl(params.getAuthServerUrl());
+		config.setResource(params.getClientId());
 		Map<String, Object> cred = new HashMap<>();
-		cred.put("secret", clientSecret);
+		cred.put("secret", params.getClientSecret());
 		config.setCredentials(cred);
+
+		logger.info("Keycloak config initialized with realm {}, authServerUrl: {}, clientId: {}",
+				params.getKcRealm(), params.getAuthServerUrl(), params.getClientId());
 	}
 	
 	public boolean authorize(String accessToken, String path, String method) {

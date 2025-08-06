@@ -4,22 +4,25 @@ import java.io.IOException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 
 import ir.mojir.my_kc_auth_client.exceptions.KeycloakAuthorizationClientException;
 import ir.mojir.my_kc_auth_client.external.KeycloakAuthorizationClient;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.stereotype.Component;
 
-//@Component
+@Component
 public class KeycloakAuthorizationFilterLogic {
 	
 	private static final Logger logger = LoggerFactory.getLogger(KeycloakAuthorizationFilterLogic.class);
 	
 //	@Autowired
 //	private ParameterService params;
-	
-	private KeycloakAuthorizationClient client = null;
+
+	@Autowired
+	private KeycloakAuthorizationClient client;
 	
 	
 //	@PostConstruct
@@ -32,18 +35,18 @@ public class KeycloakAuthorizationFilterLogic {
 //	}
 //	
 	
-	public void initialize(String kcRealm, String kcAuthServerUrl, String kcClientId, String kcClientSecret) {
-		client = new KeycloakAuthorizationClient(
-			kcRealm,
-			kcAuthServerUrl,
-			kcClientId,
-			kcClientSecret);
-	}
+//	public void initialize(String kcRealm, String kcAuthServerUrl, String kcClientId, String kcClientSecret) {
+//		client = new KeycloakAuthorizationClient(
+//			kcRealm,
+//			kcAuthServerUrl,
+//			kcClientId,
+//			kcClientSecret);
+//	}
 	
 	public void authorize(HttpServletRequest req, HttpServletResponse resp) throws IOException, KeycloakAuthorizationClientException {
 		
-		if(client == null)
-			throw new KeycloakAuthorizationClientException("initialize method must be called first", null);
+//		if(client == null)
+//			throw new KeycloakAuthorizationClientException("initialize method must be called first", null);
 		
 		if(req.getHeader("Authorization") == null)
 			throw new KeycloakAuthorizationClientException("Authorization header was not found in the request", null);
