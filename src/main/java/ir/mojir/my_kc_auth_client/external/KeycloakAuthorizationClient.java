@@ -28,7 +28,7 @@ import org.springframework.web.client.RestTemplate;
 public class KeycloakAuthorizationClient {
 
 	private final static Logger logger = LoggerFactory.getLogger(KeycloakAuthorizationClient.class);
-	
+
 	@Autowired
 	private KeycloakConfiguration params;
 

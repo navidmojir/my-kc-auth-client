@@ -53,8 +53,8 @@ public class KeycloakAuthorizationFilterLogic {
 		
 		String accessToken = req.getHeader("Authorization").replaceAll("(?i)bearer ", "");
 		
-		logger.trace("trying to authorize request with uri '{}' and method '{}' with access token '{}'", req.getRequestURI(), 
-				req.getMethod(), accessToken);
+		logger.trace("trying to authorize request with uri '{}' and method '{}' ", req.getRequestURI(),
+				req.getMethod());
 		boolean authorized = client.authorize(accessToken,
 				req.getRequestURI(), req.getMethod());
 		
