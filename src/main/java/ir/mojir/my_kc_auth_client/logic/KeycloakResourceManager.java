@@ -3,6 +3,7 @@ package ir.mojir.my_kc_auth_client.logic;
 import java.util.Map;
 import java.util.Optional;
 
+import ir.mojir.my_kc_auth_client.dtos.KcCreateResourceResp;
 import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,29 +29,8 @@ public class KeycloakResourceManager {
 	@Autowired
 	private ApplicationContext applicationContext;
 	
-//	@Autowired
-//	private ParameterService params;
 	@Autowired
 	private KeycloakAuthorizationClient client;
-	
-//	public void initialize(String kcRealm, String kcAuthServerUrl, String kcClientId, String kcClientSecret, ApplicationContext applicationContext) {
-//		this.client = new KeycloakAuthorizationClient(
-//			kcRealm,
-//			kcAuthServerUrl,
-//			kcClientId,
-//			kcClientSecret);
-//
-//		this.applicationContext = applicationContext;
-//	}
-	
-//	@PostConstruct
-//	private void init() {
-//		client = new KeycloakAuthorizationClient(
-//				params.getKcRealm(),
-//				params.getKcAuthServerUrl(),
-//				params.getKcClientId(),
-//				params.getKcClientSecret());
-//	}
 	
 	@PostConstruct
 	public void createResourcesInKeycloak() {
@@ -67,29 +47,17 @@ public class KeycloakResourceManager {
 				continue;
 			String method = optMethod.get().name();
 			String path = entry.getKey().getPathPatternsCondition().getFirstPattern().toString();
-			client.createResource(path, method);
+			String [] searchResult = client.searchResources(path, method);
+			if(searchResult.length > 0) {
+				logger.info("Resource with path {} and method {} exists. So continue...", path, method);
+				ClientResourcesCache.getInstance().put(path, method, searchResult[0]);
+				continue;
+			}
+			KcCreateResourceResp resp = client.createResource(path, method);
+			ClientResourcesCache.getInstance().put(path, method, resp.get_id());
+			logger.info("Resource with path {} and method {} was created successfully with id {}",
+					path, method, resp.get_id());
 		}
 	}
-
-//	public void createResourcesInKeycloak(ApplicationContext applicationContext) {
-//
-//		logger.info("Trying to create resources in keycloak for the client");
-//		Map<String, Object> restControllers = applicationContext.getBeansWithAnnotation(RestController.class);
-//
-//		restControllers.forEach((beanName, beanInstance) -> {
-//			logger.info("name: {}, instance: {}", beanName, beanInstance);
-//		});
-//		Map<RequestMappingInfo, HandlerMethod> map = requestMappingHandlerMapping
-//				.getHandlerMethods();
-//
-//		for(Map.Entry<RequestMappingInfo, HandlerMethod> entry: map.entrySet()) {
-//			Optional<RequestMethod> optMethod = entry.getKey().getMethodsCondition().getMethods().stream().findFirst();
-//			if(optMethod.isEmpty())
-//				continue;
-//			String method = optMethod.get().name();
-//			String path = entry.getKey().getPathPatternsCondition().getFirstPattern().toString();
-//			client.createResource(path, method);
-//		}
-//	}
 
 }

@@ -2,106 +2,145 @@ package ir.mojir.my_kc_auth_client.external;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import ir.mojir.my_kc_auth_client.config.KeycloakConfiguration;
+import ir.mojir.my_kc_auth_client.dtos.*;
+import ir.mojir.my_kc_auth_client.logic.ClientResourcesCache;
 import jakarta.annotation.PostConstruct;
-import org.keycloak.authorization.client.AuthorizationDeniedException;
-import org.keycloak.authorization.client.AuthzClient;
-import org.keycloak.authorization.client.Configuration;
-import org.keycloak.authorization.client.resource.ProtectedResource;
-import org.keycloak.authorization.client.util.HttpResponseException;
-import org.keycloak.representations.idm.authorization.AuthorizationRequest;
-import org.keycloak.representations.idm.authorization.ResourceRepresentation;
-import org.keycloak.representations.idm.authorization.ScopeRepresentation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ir.mojir.my_kc_auth_client.exceptions.KeycloakAuthorizationClientException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestTemplate;
 
 @Component
 public class KeycloakAuthorizationClient {
 
 	private final static Logger logger = LoggerFactory.getLogger(KeycloakAuthorizationClient.class);
 	
-	private Configuration config = new Configuration();
-	
-//	public KeycloakAuthorizationClient(String realm, String authServerUrl, String clientId, String clientSecret) {
-//		config.setRealm(realm);
-//		config.setAuthServerUrl(authServerUrl);
-//		config.setResource(clientId);
-//		Map<String, Object> cred = new HashMap<>();
-//		cred.put("secret", clientSecret);
-//		config.setCredentials(cred);
-//	}
-
 	@Autowired
 	private KeycloakConfiguration params;
 
-	@PostConstruct
-	private void initConfig() {
-		config.setRealm(params.getKcRealm());
-		config.setAuthServerUrl(params.getAuthServerUrl());
-		config.setResource(params.getClientId());
-		Map<String, Object> cred = new HashMap<>();
-		cred.put("secret", params.getClientSecret());
-		config.setCredentials(cred);
+	private String clientAccessToken = null;
 
-		logger.info("Keycloak config initialized with realm {}, authServerUrl: {}, clientId: {}",
-				params.getKcRealm(), params.getAuthServerUrl(), params.getClientId());
+
+	public KcCreateResourceResp createResource(String path, String method) {
+
+		getAccessTokenForClient();
+
+		RestTemplate restTemplate = new RestTemplate();
+
+		HttpHeaders headers = new HttpHeaders();
+		headers.setBearerAuth(clientAccessToken);
+
+		KcCreateResourceReq req = new KcCreateResourceReq();
+		KcScope scope = new KcScope();
+		scope.setName(method);
+		req.setResource_scopes(Collections.singletonList(scope));
+		req.setScopes(Collections.singletonList(scope));
+		req.setName(method + " - " + path);
+		req.setDisplayName(method + " - " + path);
+		req.setUris(Collections.singletonList(path));
+
+		HttpEntity<KcCreateResourceReq> requestEntity = new HttpEntity<KcCreateResourceReq>(req, headers);
+
+		return restTemplate.postForObject(params.getAuthServerUrl() + "/realms/" +
+				params.getKcRealm()	+ "/authz/protection/resource_set", requestEntity, KcCreateResourceResp.class);
 	}
-	
-	public boolean authorize(String accessToken, String path, String method) {
-		
-		
-		AuthzClient authzClient = AuthzClient.create(config);
-		
-		AuthorizationRequest req = new AuthorizationRequest();
-		req.addPermission(path,  method);
-		try {
-			authzClient.authorization(accessToken).authorize(req);
-			return true;
-		} 
-		catch(AuthorizationDeniedException e) {
-			return false;
-		}
-		catch(RuntimeException e) {
-			if(e.getCause() != null && e.getCause() instanceof HttpResponseException) {
-				HttpResponseException re = (HttpResponseException)e.getCause();
-				String responseFromKeycloak = new String(re.getBytes());
-				throw new KeycloakAuthorizationClientException("response from authorization server" + responseFromKeycloak, re);
-			}
-			else
-				throw new KeycloakAuthorizationClientException("A runtime exception occured while authorizing request", e);
-		} catch(Exception e) {
-			throw new KeycloakAuthorizationClientException("Failed to authorize request (general exception)", e);
-		}
-		
+
+	public String[] searchResources(String path, String method) {
+		getAccessTokenForClient();
+		RestTemplate restTemplate = new RestTemplate();
+
+		HttpHeaders headers = new HttpHeaders();
+		headers.setBearerAuth(clientAccessToken);
+
+		Map<String, String> uriVariables = new HashMap<>();
+		uriVariables.put("path", path);
+		uriVariables.put("method", method);
+
+		HttpEntity<String> entity = new HttpEntity<>(headers);
+
+
+
+		return restTemplate.exchange(params.getAuthServerUrl() + "/realms/" +
+				params.getKcRealm()	+"/authz/protection/resource_set?uri={path}&scope={method}",
+				HttpMethod.GET,
+				entity,
+				String[].class,
+				uriVariables).getBody();
 	}
-	
-	public void createResource(String path, String method) {
-		logger.info("Attempting to create resource with path {} and method {} on keycloak", path, method);
-		AuthzClient authzClient = AuthzClient.create(config);
-		ResourceRepresentation newResource = new ResourceRepresentation();
-		newResource.setName(path);
-		newResource.setDisplayName(path);
-		newResource.setUris(Collections.singleton(path));
-		newResource.addScope(new ScopeRepresentation(method));
-		
-		ProtectedResource resourceClient = authzClient.protection().resource();
-		ResourceRepresentation existingResource = resourceClient.findByName(path);
-		if(existingResource != null) {
-			logger.info("path {} exists. So nothing to do...", path);
+
+	private void getAccessTokenForClient() {
+		if(clientAccessToken != null)
 			return;
-		}
-		
-		ResourceRepresentation response = resourceClient.create(newResource);
-		logger.info("resource with id {} and name {} and method {} was created on keycloak successfully", 
-				response.getId(),
-				response.getName(),
-				method);
-		
+
+		RestTemplate restTemplate = new RestTemplate();
+
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+		MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
+		formData.add("grant_type", "client_credentials");
+		formData.add("client_id", params.getClientId());
+		formData.add("client_secret", params.getClientSecret());
+
+		HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(formData, headers);
+
+
+		KcAccessTokenResp resp = restTemplate.postForObject(params.getAuthServerUrl() + "/realms/" +
+				params.getKcRealm()	+ "/protocol/openid-connect/token", requestEntity, KcAccessTokenResp.class);
+
+		clientAccessToken = resp.getAccess_token();
 	}
+
+	public boolean authorize(String accessToken, String path, String method) {
+		try {
+
+			RestTemplate restTemplate = new RestTemplate();
+
+			HttpHeaders headers = new HttpHeaders();
+			headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+			headers.setBearerAuth(accessToken);
+
+			MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
+			formData.add("grant_type", "urn:ietf:params:oauth:grant-type:uma-ticket");
+			formData.add("audience", params.getClientId());
+			formData.add("response_mode", "decision");
+			formData.add("permission", getPermissionId(path, method) + "#" + method);
+
+			HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(formData, headers);
+
+
+			KcAuthorizeResp resp = restTemplate.postForObject(params.getAuthServerUrl() + "/realms/" +
+					params.getKcRealm() + "/protocol/openid-connect/token", requestEntity, KcAuthorizeResp.class);
+
+			return resp.isResult();
+		} catch (HttpClientErrorException e) {
+			if(e.getMessage().contains("not_authorized"))
+				return false;
+			throw new KeycloakAuthorizationClientException("Http client returned unexpected error while authorizing", e);
+		} catch (Exception e) {
+			throw new KeycloakAuthorizationClientException("Unexpected error occured", e);
+		}
+
+
+	}
+
+	private String getPermissionId(String path, String method) {
+		return ClientResourcesCache.getInstance().get(path, method);
+	}
+
+
 }
