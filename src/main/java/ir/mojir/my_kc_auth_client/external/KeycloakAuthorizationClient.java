@@ -8,16 +8,14 @@ import java.util.Map;
 import ir.mojir.my_kc_auth_client.config.KeycloakConfiguration;
 import ir.mojir.my_kc_auth_client.dtos.*;
 import ir.mojir.my_kc_auth_client.logic.ClientResourcesCache;
+import ir.mojir.spring_boot_commons.exceptions.UnauthorizedException;
 import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ir.mojir.my_kc_auth_client.exceptions.KeycloakAuthorizationClientException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
+import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -130,6 +128,8 @@ public class KeycloakAuthorizationClient {
 		} catch (HttpClientErrorException e) {
 			if(e.getMessage().contains("not_authorized"))
 				return false;
+			else if(e.getStatusCode() == HttpStatus.UNAUTHORIZED)
+				throw new UnauthorizedException("Keycloak responded with 401. Is your access token valid?");
 			throw new KeycloakAuthorizationClientException("Http client returned unexpected error while authorizing", e);
 		} catch (Exception e) {
 			throw new KeycloakAuthorizationClientException("Unexpected error occured", e);
