@@ -129,10 +129,10 @@ public class KeycloakAuthorizationClient {
 			if(e.getMessage().contains("not_authorized"))
 				return false;
 			else if(e.getStatusCode() == HttpStatus.UNAUTHORIZED)
-				throw new UnauthorizedException("Keycloak responded with 401. Is your access token valid?");
+				throw new UnauthorizedException("Access token is invalid");
 			throw new KeycloakAuthorizationClientException("Http client returned unexpected error while authorizing", e);
 		} catch (Exception e) {
-			throw new KeycloakAuthorizationClientException("Unexpected error occured", e);
+			throw new KeycloakAuthorizationClientException("Unexpected error occured while authorizing", e);
 		}
 
 
