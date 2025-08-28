@@ -1,9 +1,6 @@
 package ir.mojir.my_kc_auth_client.external;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import ir.mojir.my_kc_auth_client.config.KeycloakConfiguration;
 import ir.mojir.my_kc_auth_client.dtos.*;
@@ -140,6 +137,27 @@ public class KeycloakAuthorizationClient {
 
 	private String getPermissionId(String path, String method) {
 		return ClientResourcesCache.getInstance().get(path, method);
+	}
+
+	public KcUserDetails getUserDetails(String userId) {
+		getAccessTokenForClient();
+
+		RestTemplate restTemplate = new RestTemplate();
+
+		HttpHeaders headers = new HttpHeaders();
+		headers.setBearerAuth(clientAccessToken);
+
+		HttpEntity<String> entity = new HttpEntity<>(headers);
+
+		KcUserDetails result = restTemplate.exchange(params.getAuthServerUrl() + "/admin/realms/" + params.getKcRealm()
+						+ "/users/"+userId,
+				HttpMethod.GET,
+				entity,
+				KcUserDetails.class
+				).getBody();
+
+		result.setRetrievalTime(new Date());
+		return result;
 	}
 
 
