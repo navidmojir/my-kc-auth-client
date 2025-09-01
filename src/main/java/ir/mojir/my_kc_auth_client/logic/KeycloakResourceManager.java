@@ -8,18 +8,14 @@ import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationListener;
-import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
-import ir.mojir.my_kc_auth_client.external.KeycloakAuthorizationClient;
+import ir.mojir.my_kc_auth_client.external.KeycloakClient;
 
 @Component
 public class KeycloakResourceManager {
@@ -30,7 +26,7 @@ public class KeycloakResourceManager {
 	private ApplicationContext applicationContext;
 	
 	@Autowired
-	private KeycloakAuthorizationClient client;
+	private KeycloakClient client;
 	
 	@PostConstruct
 	public void createResourcesInKeycloak() {

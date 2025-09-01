@@ -17,6 +17,9 @@ public class KeycloakConfiguration {
     @Value("${kc.clientSecret:}")
     private String clientSecret;
 
+    @Value("${kc.clientUuid:}")
+    private String clientUuid;
+
     public String getKcRealm() {
         return kcRealm;
     }
@@ -31,5 +34,9 @@ public class KeycloakConfiguration {
 
     public String getClientSecret() {
         return clientSecret;
+    }
+
+    public String getClientUuid() {
+        return clientUuid;
     }
 }

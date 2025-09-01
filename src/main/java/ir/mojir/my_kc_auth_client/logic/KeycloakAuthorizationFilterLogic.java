@@ -9,7 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 
 import ir.mojir.my_kc_auth_client.exceptions.KeycloakAuthorizationClientException;
-import ir.mojir.my_kc_auth_client.external.KeycloakAuthorizationClient;
+import ir.mojir.my_kc_auth_client.external.KeycloakClient;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Component;
@@ -25,7 +25,7 @@ public class KeycloakAuthorizationFilterLogic {
 //	private ParameterService params;
 
 	@Autowired
-	private KeycloakAuthorizationClient client;
+	private KeycloakClient client;
 	
 
 	@Autowired

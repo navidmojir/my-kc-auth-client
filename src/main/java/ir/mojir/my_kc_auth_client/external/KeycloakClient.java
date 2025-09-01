@@ -6,12 +6,12 @@ import ir.mojir.my_kc_auth_client.config.KeycloakConfiguration;
 import ir.mojir.my_kc_auth_client.dtos.*;
 import ir.mojir.my_kc_auth_client.logic.ClientResourcesCache;
 import ir.mojir.spring_boot_commons.exceptions.UnauthorizedException;
-import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ir.mojir.my_kc_auth_client.exceptions.KeycloakAuthorizationClientException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
@@ -20,9 +20,9 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 @Component
-public class KeycloakAuthorizationClient {
+public class KeycloakClient {
 
-	private final static Logger logger = LoggerFactory.getLogger(KeycloakAuthorizationClient.class);
+	private final static Logger logger = LoggerFactory.getLogger(KeycloakClient.class);
 
 	@Autowired
 	private KeycloakConfiguration params;
@@ -159,6 +159,132 @@ public class KeycloakAuthorizationClient {
 		result.setRetrievalTime(new Date());
 		return result;
 	}
+
+
+	/*public KcSearchClientRespRow[] searchClientsByClientId(String clientId) {
+		getAccessTokenForClient();
+
+		RestTemplate restTemplate = new RestTemplate();
+		HttpHeaders headers = new HttpHeaders();
+		headers.setBearerAuth(clientAccessToken);
+		HttpEntity<String> entity = new HttpEntity<>(headers);
+		return restTemplate.exchange(params.getAuthServerUrl() + "/admin/realms/" + params.getKcRealm()
+						+ "/clients?clientId="+ clientId,
+				HttpMethod.GET,
+				entity,
+				KcSearchClientRespRow[].class
+		).getBody();
+	}*/
+
+	public void createClientRole(KcCreateClientRoleReq req) {
+//		getAccessTokenForClient();
+//
+//		RestTemplate restTemplate = new RestTemplate();
+//		HttpHeaders headers = new HttpHeaders();
+//		headers.setBearerAuth(clientAccessToken);
+//		HttpEntity<KcCreateClientRoleReq> entity = new HttpEntity<>(req, headers);
+//		restTemplate.exchange(
+//				params.getAuthServerUrl() + "/admin/realms/" + params.getKcRealm()
+//						+ "/clients/" + clientUuid + "/roles",
+//				HttpMethod.POST,
+//				entity,
+//				Void.class
+//		);
+		String url = String.format("/admin/realms/%s/clients/%s/roles",
+				params.getKcRealm(), params.getClientUuid());
+
+		callPost(url, req, new ParameterizedTypeReference<Void>() {});
+	}
+
+	private <REQ, RESP> RESP callPost(String url, REQ req, ParameterizedTypeReference<RESP> responseType) {
+		Class<RESP> respClass;
+		getAccessTokenForClient();
+
+		RestTemplate restTemplate = new RestTemplate();
+		HttpHeaders headers = new HttpHeaders();
+		headers.setBearerAuth(clientAccessToken);
+		HttpEntity<REQ> entity = new HttpEntity<>(req, headers);
+		return restTemplate.exchange(
+				params.getAuthServerUrl() + url,
+				HttpMethod.POST,
+				entity,
+				responseType
+		).getBody();
+	}
+
+	private <RESP> RESP callGet(String url, ParameterizedTypeReference<RESP> responseType) {
+		Class<RESP> respClass;
+		getAccessTokenForClient();
+
+		RestTemplate restTemplate = new RestTemplate();
+		HttpHeaders headers = new HttpHeaders();
+		headers.setBearerAuth(clientAccessToken);
+		HttpEntity<String> entity = new HttpEntity<>(headers);
+		return restTemplate.exchange(
+				params.getAuthServerUrl() + url,
+				HttpMethod.GET,
+				entity,
+				responseType
+		).getBody();
+	}
+
+	public KcSearchClientRoleRespRow[] getAllClientRoles() {
+//		getAccessTokenForClient();
+//
+//		RestTemplate restTemplate = new RestTemplate();
+//		HttpHeaders headers = new HttpHeaders();
+//		headers.setBearerAuth(clientAccessToken);
+//		HttpEntity<String> entity = new HttpEntity<>(headers);
+//		return restTemplate.exchange(params.getAuthServerUrl() + "/admin/realms/" + params.getKcRealm()
+//						+ "/clients/" + params.getClientUuid() + "/roles",
+//				HttpMethod.GET,
+//				entity,
+//				KcSearchClientRoleRespRow[].class
+//		).getBody();
+
+		String url = String.format("/admin/realms/%s/clients/%s/roles", params.getKcRealm(), params.getClientUuid());
+		return callGet(url, new ParameterizedTypeReference<KcSearchClientRoleRespRow[]>() {});
+	}
+
+	public KcGetUsersInClientRoleRespRow[] getUsersInClientRole(String roleName) {
+//		getAccessTokenForClient();
+//
+//		RestTemplate restTemplate = new RestTemplate();
+//		HttpHeaders headers = new HttpHeaders();
+//		headers.setBearerAuth(clientAccessToken);
+//		HttpEntity<String> entity = new HttpEntity<>(headers);
+//		return restTemplate.exchange(params.getAuthServerUrl() + "/admin/realms/" + params.getKcRealm()
+//						+ "/clients/" + clientUuid + "/roles/" + roleName + "/users",
+//				HttpMethod.GET,
+//				entity,
+//				KcGetUsersInClientRoleRespRow[].class
+//		).getBody();
+
+		String url = String.format("/admin/realms/%s/clients/%s/roles/%s/users",
+				params.getKcRealm(), params.getClientUuid(), roleName);
+		return callGet(url, new ParameterizedTypeReference<KcGetUsersInClientRoleRespRow[]>() {});
+	}
+
+	public void createAuthorizationPolicy(KcCreateAuthorizationPolicyReq req) {
+		String url = String.format("/admin/realms/cbi/clients/%s/authz/resource-server/policy/role", params.getClientUuid());
+		callPost(url, req, new ParameterizedTypeReference<Void>() {});
+	}
+
+	public KcGetClientRoleDetailsResp getClientRoleDetails(String roleName) {
+		String url = String.format("/admin/realms/cbi/clients/%s/roles/%s", params.getClientUuid(), roleName);
+		return callGet(url, new ParameterizedTypeReference<KcGetClientRoleDetailsResp>() {});
+	}
+
+	public KcGetAllClientAuthorizationPoliciesRespRow[] getAllClientAuthorizationPolicies() {
+		String url = String.format("/admin/realms/cbi/clients/%s/authz/resource-server/policy", params.getClientUuid());
+		return callGet(url, new ParameterizedTypeReference<KcGetAllClientAuthorizationPoliciesRespRow[]>() {});
+	}
+
+	public void createPermission(KcCreatePermissionReq req) {
+		String url = String.format("/admin/realms/cbi/clients/%s/authz/resource-server/permission/scope", params.getClientUuid());
+		callPost(url, req, new ParameterizedTypeReference<Void>() {});
+	}
+
 
 
 }
