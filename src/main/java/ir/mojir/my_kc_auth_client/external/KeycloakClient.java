@@ -78,8 +78,8 @@ public class KeycloakClient {
 	}
 
 	private void getAccessTokenForClient() {
-		if(clientAccessToken != null)
-			return;
+//		if(clientAccessToken != null)
+//			return;
 
 		RestTemplate restTemplate = new RestTemplate();
 
