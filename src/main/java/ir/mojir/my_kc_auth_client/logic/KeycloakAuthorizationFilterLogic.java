@@ -53,6 +53,10 @@ public class KeycloakAuthorizationFilterLogic {
 		
 //		if(client == null)
 //			throw new KeycloakAuthorizationClientException("initialize method must be called first", null);
+//		logger.info(req.getMethod());
+		
+		if(req.getMethod().equals("OPTIONS"))
+			return;
 		
 		if(req.getHeader("Authorization") == null)
 			throw new KeycloakAuthorizationClientException("Authorization header was not found in the request", null);
