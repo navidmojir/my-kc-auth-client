@@ -20,6 +20,12 @@ public class KeycloakConfiguration {
     @Value("${kc.clientUuid:}")
     private String clientUuid;
 
+    @Value("${kc.tmpAdminUsername:tmpadmin}")
+    private String tmpAdminUsername;
+
+    @Value("${kc.tmpAdminPassword:tmpadmin}")
+    private String tmpAdminPassword;
+
     public String getKcRealm() {
         return kcRealm;
     }
@@ -38,5 +44,13 @@ public class KeycloakConfiguration {
 
     public String getClientUuid() {
         return clientUuid;
+    }
+
+    public String getTmpAdminUsername() {
+        return tmpAdminUsername;
+    }
+
+    public String getTmpAdminPassword() {
+        return tmpAdminPassword;
     }
 }
