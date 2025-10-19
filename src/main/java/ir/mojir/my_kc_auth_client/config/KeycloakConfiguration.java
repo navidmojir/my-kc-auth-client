@@ -1,10 +1,21 @@
 package ir.mojir.my_kc_auth_client.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import ir.mojir.spring_boot_commons.helpers.Validations;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.Map;
+
 @Configuration
 public class KeycloakConfiguration {
+    private static final String FILE_PATH = "keycloak-client-info.json";
+
+    private static final Logger logger = LoggerFactory.getLogger(KeycloakConfiguration.class);
     @Value("${kc.realm:cbi}")
     private String kcRealm;
 
@@ -42,10 +53,12 @@ public class KeycloakConfiguration {
     }
 
     public String getClientSecret() {
+        loadClientUuidAndSecretFromFileIfExists();
         return clientSecret;
     }
 
     public String getClientUuid() {
+        loadClientUuidAndSecretFromFileIfExists();
         return clientUuid;
     }
 
@@ -59,5 +72,29 @@ public class KeycloakConfiguration {
 
     public String getWuiClientId() {
         return wuiClientId;
+    }
+
+    /**
+     * If a file with FILE_PATH exists, It's priority is higher than application properties
+     */
+    private void loadClientUuidAndSecretFromFileIfExists() {
+        if(!Validations.isBlank(clientUuid) && !Validations.isBlank(clientSecret)) {
+            logger.info("client uuid and client secret was set before");
+            return;
+        }
+        File file = new File(FILE_PATH);
+        if (!file.exists()) {
+            logger.info("File {} does not exists. So load client uuid and secret from application properties.", FILE_PATH);
+            return;
+        }
+
+        try {
+            Map<String, String> result = new ObjectMapper().readValue(file, Map.class);
+            clientUuid = result.get("clientUuid");
+            clientSecret = result.get("clientSecret");
+            logger.info("Client UUID and Secret was loaded from file");
+        } catch (IOException e) {
+            logger.info("Failed to load client uuid and secret from file {}. So falling back to application properties", FILE_PATH, e);
+        }
     }
 }

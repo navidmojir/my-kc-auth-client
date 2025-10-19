@@ -6,6 +6,14 @@ public class KcCreateClientReq {
     private boolean publicClient;
     private String protocol;
 
+    private boolean serviceAccountsEnabled;
+
+    private boolean directAccessGrantsEnabled;
+
+    private boolean standardFlowEnabled;
+
+    private boolean authorizationServicesEnabled;
+
     public String getClientId() {
         return clientId;
     }
@@ -36,5 +44,37 @@ public class KcCreateClientReq {
 
     public void setProtocol(String protocol) {
         this.protocol = protocol;
+    }
+
+    public boolean isServiceAccountsEnabled() {
+        return serviceAccountsEnabled;
+    }
+
+    public void setServiceAccountsEnabled(boolean serviceAccountsEnabled) {
+        this.serviceAccountsEnabled = serviceAccountsEnabled;
+    }
+
+    public boolean isDirectAccessGrantsEnabled() {
+        return directAccessGrantsEnabled;
+    }
+
+    public void setDirectAccessGrantsEnabled(boolean directAccessGrantsEnabled) {
+        this.directAccessGrantsEnabled = directAccessGrantsEnabled;
+    }
+
+    public boolean isStandardFlowEnabled() {
+        return standardFlowEnabled;
+    }
+
+    public void setStandardFlowEnabled(boolean standardFlowEnabled) {
+        this.standardFlowEnabled = standardFlowEnabled;
+    }
+
+    public boolean isAuthorizationServicesEnabled() {
+        return authorizationServicesEnabled;
+    }
+
+    public void setAuthorizationServicesEnabled(boolean authorizationServicesEnabled) {
+        this.authorizationServicesEnabled = authorizationServicesEnabled;
     }
 }

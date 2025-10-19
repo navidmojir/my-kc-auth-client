@@ -339,14 +339,24 @@ public class KeycloakClient {
 	}
 
 	public boolean isClientExists(String clientId, String adminAccessToken) {
+		KcGetClientResp resp = getClient(clientId, adminAccessToken);
+		if(resp == null)
+			return false;
+		return true;
+	}
+
+	public KcGetClientResp getClient(String clientId, String adminAccessToken) {
 		try {
 			String url = "/admin/realms/" + params.getKcRealm() + "/clients?clientId=" + clientId;
-			List<?> resp = callGet(url,
-					new ParameterizedTypeReference<List>() {},
+			List<KcGetClientResp> resp = callGet(url,
+					new ParameterizedTypeReference<List<KcGetClientResp>>() {},
 					adminAccessToken);
-			return resp != null && !resp.isEmpty();
+			if(resp != null && !resp.isEmpty())
+				return resp.get(0);
+			else
+				return null;
 		} catch(HttpClientErrorException.NotFound e) {
-			return false;
+			return null;
 		}
 	}
 
@@ -354,6 +364,17 @@ public class KeycloakClient {
 		String url = "/admin/realms/" + params.getKcRealm() + "/clients";
 		callPost(url, req, new ParameterizedTypeReference<Void>() {}, adminAccessToken);
 
+	}
+
+	public String fetchClientSecret(String clientUuid, String adminAccessToken) {
+		String url = String.format("/admin/realms/%s/clients/%s/client-secret", params.getKcRealm(), clientUuid);
+		KcFetchClientSecretResp resp = callGet(url, new ParameterizedTypeReference<KcFetchClientSecretResp>() {}, adminAccessToken);
+		return resp.getValue();
+	}
+
+	public KcGetServiceAccountUserIdResp getServiceAccountUserId(String clientUuid, String adminAccessToken) {
+		String url = String.format("/admin/realms/%s/clients/%s/service-account-user", params.getKcRealm(), clientUuid);
+		return callGet(url, new ParameterizedTypeReference<KcGetServiceAccountUserIdResp>() {}, adminAccessToken);
 	}
 
 
