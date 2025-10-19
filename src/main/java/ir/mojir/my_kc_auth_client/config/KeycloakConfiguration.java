@@ -11,8 +11,11 @@ public class KeycloakConfiguration {
     @Value("${kc.authServerUrl:http://localhost:8080}")
     private String authServerUrl;
 
-    @Value("${kc.clientId:admin-cli}")
+    @Value("${kc.clientId:}")
     private String clientId;
+
+    @Value("${kc.wuiClientId:}")
+    private String wuiClientId;
 
     @Value("${kc.clientSecret:}")
     private String clientSecret;
@@ -52,5 +55,9 @@ public class KeycloakConfiguration {
 
     public String getTmpAdminPassword() {
         return tmpAdminPassword;
+    }
+
+    public String getWuiClientId() {
+        return wuiClientId;
     }
 }

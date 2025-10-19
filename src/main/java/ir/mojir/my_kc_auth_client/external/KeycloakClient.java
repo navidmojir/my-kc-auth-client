@@ -238,20 +238,29 @@ public class KeycloakClient {
 	}
 
 	private <RESP> RESP callGet(String url, ParameterizedTypeReference<RESP> responseType) {
-		Class<RESP> respClass;
 		getAccessTokenForClient();
+		return callGet(url, responseType, clientAccessToken);
+	}
+	private <RESP> RESP callGet(String url, ParameterizedTypeReference<RESP> responseType, String accessToken) {
+		return callGetAsResponseEntity(url, responseType, accessToken).getBody();
+	}
+
+	private <RESP> ResponseEntity<RESP> callGetAsResponseEntity(String url, ParameterizedTypeReference<RESP> responseType, String accessToken) {
+		Class<RESP> respClass;
 
 		RestTemplate restTemplate = new RestTemplate();
 		HttpHeaders headers = new HttpHeaders();
-		headers.setBearerAuth(clientAccessToken);
+		headers.setBearerAuth(accessToken);
 		HttpEntity<String> entity = new HttpEntity<>(headers);
 		return restTemplate.exchange(
 				params.getAuthServerUrl() + url,
 				HttpMethod.GET,
 				entity,
 				responseType
-		).getBody();
+		);
 	}
+
+
 
 	public KcSearchClientRoleRespRow[] getAllClientRoles() {
 //		getAccessTokenForClient();
@@ -316,6 +325,35 @@ public class KeycloakClient {
 
 	public void createRealm(KcCreateRealmReq req, String adminAccessToken) {
 		callPost("/admin/realms", req, new ParameterizedTypeReference<Void>() {}, adminAccessToken);
+	}
+
+	public boolean isRealmExists(String realmName, String adminAccessToken) {
+		try {
+			ResponseEntity<Void> resp = callGetAsResponseEntity("/admin/realms/" + realmName,
+					new ParameterizedTypeReference<Void>() {
+					}, adminAccessToken);
+			return resp.getStatusCode().is2xxSuccessful();
+		} catch(HttpClientErrorException.NotFound e) {
+			return false;
+		}
+	}
+
+	public boolean isClientExists(String clientId, String adminAccessToken) {
+		try {
+			String url = "/admin/realms/" + params.getKcRealm() + "/clients?clientId=" + clientId;
+			List<?> resp = callGet(url,
+					new ParameterizedTypeReference<List>() {},
+					adminAccessToken);
+			return resp != null && !resp.isEmpty();
+		} catch(HttpClientErrorException.NotFound e) {
+			return false;
+		}
+	}
+
+	public void createClient(KcCreateClientReq req, String adminAccessToken) {
+		String url = "/admin/realms/" + params.getKcRealm() + "/clients";
+		callPost(url, req, new ParameterizedTypeReference<Void>() {}, adminAccessToken);
+
 	}
 
 
