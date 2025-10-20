@@ -79,7 +79,6 @@ public class KeycloakConfiguration {
      */
     private void loadClientUuidAndSecretFromFileIfExists() {
         if(!Validations.isBlank(clientUuid) && !Validations.isBlank(clientSecret)) {
-            logger.info("client uuid and client secret was set before");
             return;
         }
         File file = new File(FILE_PATH);

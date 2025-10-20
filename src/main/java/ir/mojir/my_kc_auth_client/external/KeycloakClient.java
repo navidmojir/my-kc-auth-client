@@ -377,6 +377,16 @@ public class KeycloakClient {
 		return callGet(url, new ParameterizedTypeReference<KcGetServiceAccountUserIdResp>() {}, adminAccessToken);
 	}
 
+	public void assignClientRoleToUser(String userId, String clientUuid, KcAssignClientRoleToUserReqRow[] req, String adminAccessToken) {
+		String url = String.format("/admin/realms/%s/users/%s/role-mappings/clients/%s", params.getKcRealm(), userId, clientUuid);
+		callPost(url, req, new ParameterizedTypeReference<Void>() {}, adminAccessToken);
+	}
+
+	public KcGetAvailableRolesForUserRespRow[] getAvailableRolesForUser(String userId, String adminAccessToken, String search) {
+		String url = String.format("/admin/realms/%s/ui-ext/available-roles/users/%s?search=%s", params.getKcRealm(), userId, search);
+		return callGet(url, new ParameterizedTypeReference<KcGetAvailableRolesForUserRespRow[]>() {}, adminAccessToken);
+	}
+
 
 
 }
