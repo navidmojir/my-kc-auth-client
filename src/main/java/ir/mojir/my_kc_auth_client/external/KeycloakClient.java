@@ -402,6 +402,8 @@ public class KeycloakClient {
 		return result[0];
 	}
 
+	//This method became dirty because I had some challenges with paths like /tickets/{id}
+	//The error was: Not enough variable values available to expand 'id'
 	public KcGetPermissionResp getPermissionByName(String clientUuid, String permissionName, String adminAccessToken) {
 //		String encodedPermissionName = permissionName.replace("{", "%7B").replace("}", "%7D");
 		String encodedPermissionName = null;
@@ -411,16 +413,14 @@ public class KeycloakClient {
 			throw new InternalErrorException("Failed to encode permission name with value " + permissionName, e);
 		}
 		String url = String.format("/admin/realms/sts/clients/%s/authz/resource-server/permission?name=%s", clientUuid, encodedPermissionName);
-//		KcGetPermissionResp[] result = callGet(url, new ParameterizedTypeReference<KcGetPermissionResp[]>() {}, adminAccessToken);
 
-		//I have to call
+
 		URI uri = null;
 		try {
 			uri = new URI(params.getAuthServerUrl() + url);
 		} catch (URISyntaxException e) {
 			throw new InternalErrorException("Failed to convert url " + params.getAuthServerUrl() + url + " to uri", e);
 		}
-
 
 		RestTemplate restTemplate = new RestTemplate();
 		HttpHeaders headers = new HttpHeaders();
