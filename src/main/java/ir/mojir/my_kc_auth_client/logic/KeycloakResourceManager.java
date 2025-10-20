@@ -28,7 +28,7 @@ public class KeycloakResourceManager {
 	@Autowired
 	private KeycloakClient client;
 	
-	@PostConstruct
+//	@PostConstruct
 	public void createResourcesInKeycloak() {
 
 		logger.info("Trying to create resources in keycloak for the client");

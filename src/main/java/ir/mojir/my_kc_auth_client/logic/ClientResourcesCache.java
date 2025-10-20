@@ -34,4 +34,8 @@ public class ClientResourcesCache {
         return map.get(path + "#" + method);
     }
 
+    public Map<String, String> getMap() {
+        return this.map;
+    }
+
 }

@@ -1,10 +1,16 @@
 package ir.mojir.my_kc_auth_client.external;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 import ir.mojir.my_kc_auth_client.config.KeycloakConfiguration;
 import ir.mojir.my_kc_auth_client.dtos.*;
 import ir.mojir.my_kc_auth_client.logic.ClientResourcesCache;
+import ir.mojir.spring_boot_commons.exceptions.InternalErrorException;
 import ir.mojir.spring_boot_commons.exceptions.UnauthorizedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -385,6 +391,61 @@ public class KeycloakClient {
 	public KcGetAvailableRolesForUserRespRow[] getAvailableRolesForUser(String userId, String adminAccessToken, String search) {
 		String url = String.format("/admin/realms/%s/ui-ext/available-roles/users/%s?search=%s", params.getKcRealm(), userId, search);
 		return callGet(url, new ParameterizedTypeReference<KcGetAvailableRolesForUserRespRow[]>() {}, adminAccessToken);
+	}
+
+	public KcGetPolicyResp getPolicyByName(String clientUuid, String policyName, String adminAccessToken) {
+		String url = String.format("/admin/realms/sts/clients/%s/authz/resource-server/policy?name=%s", clientUuid, policyName);
+		KcGetPolicyResp[] result = callGet(url, new ParameterizedTypeReference<KcGetPolicyResp[]>() {}, adminAccessToken);
+
+		if(result == null || result.length != 1)
+			return null;
+		return result[0];
+	}
+
+	public KcGetPermissionResp getPermissionByName(String clientUuid, String permissionName, String adminAccessToken) {
+//		String encodedPermissionName = permissionName.replace("{", "%7B").replace("}", "%7D");
+		String encodedPermissionName = null;
+		try {
+			encodedPermissionName = URLEncoder.encode(permissionName, StandardCharsets.UTF_8.toString());
+		} catch (UnsupportedEncodingException e) {
+			throw new InternalErrorException("Failed to encode permission name with value " + permissionName, e);
+		}
+		String url = String.format("/admin/realms/sts/clients/%s/authz/resource-server/permission?name=%s", clientUuid, encodedPermissionName);
+//		KcGetPermissionResp[] result = callGet(url, new ParameterizedTypeReference<KcGetPermissionResp[]>() {}, adminAccessToken);
+
+		//I have to call
+		URI uri = null;
+		try {
+			uri = new URI(params.getAuthServerUrl() + url);
+		} catch (URISyntaxException e) {
+			throw new InternalErrorException("Failed to convert url " + params.getAuthServerUrl() + url + " to uri", e);
+		}
+
+
+		RestTemplate restTemplate = new RestTemplate();
+		HttpHeaders headers = new HttpHeaders();
+		headers.setBearerAuth(adminAccessToken);
+		HttpEntity<String> entity = new HttpEntity<>(headers);
+		KcGetPermissionResp[] result = restTemplate.exchange(
+				uri,
+				HttpMethod.GET,
+				entity,
+				KcGetPermissionResp[].class
+		).getBody();
+
+		if(result == null || result.length == 0)
+			return null;
+		else if(result.length == 1)
+			return result[0];
+		else if(result.length > 1) {
+			for (KcGetPermissionResp p : result) {
+				if (p.getName().equals(permissionName))
+					return p;
+			}
+			return null;
+		} else {
+			throw new InternalErrorException("Unexpected situation in getting permission. result length is negative!", null);
+		}
 	}
 
 
