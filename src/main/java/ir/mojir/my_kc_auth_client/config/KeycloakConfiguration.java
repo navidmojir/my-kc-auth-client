@@ -40,6 +40,12 @@ public class KeycloakConfiguration {
     @Value("${kc.tmpAdminPassword:tmpadmin}")
     private String tmpAdminPassword;
 
+    @Value("${kc.adminUsername:admin}")
+    private String adminUsername;
+
+    @Value("${kc.adminPassword:admin}")
+    private String adminPassword;
+
     public String getKcRealm() {
         return kcRealm;
     }
@@ -95,5 +101,13 @@ public class KeycloakConfiguration {
         } catch (IOException e) {
             logger.info("Failed to load client uuid and secret from file {}. So falling back to application properties", FILE_PATH, e);
         }
+    }
+
+    public String getAdminUsername() {
+        return adminUsername;
+    }
+
+    public String getAdminPassword() {
+        return adminPassword;
     }
 }

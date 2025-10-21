@@ -1,6 +1,6 @@
 package ir.mojir.my_kc_auth_client.dtos;
 
-public class KcGetAvailableRolesForUserRespRow {
+public class KcGetAvailableClientRolesForUserRespRow {
     private String id;
     private String clientId;
 

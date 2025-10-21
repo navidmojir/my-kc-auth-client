@@ -229,6 +229,9 @@ public class KeycloakClient {
 	}
 
 	private <REQ, RESP> RESP callPost(String url, REQ req, ParameterizedTypeReference<RESP> responseType, String accessToken) {
+		return callPostAsResponseEntity(url, req, responseType, accessToken).getBody();
+	}
+	private <REQ, RESP> ResponseEntity<RESP> callPostAsResponseEntity(String url, REQ req, ParameterizedTypeReference<RESP> responseType, String accessToken) {
 		Class<RESP> respClass;
 
 		RestTemplate restTemplate = new RestTemplate();
@@ -240,7 +243,22 @@ public class KeycloakClient {
 				HttpMethod.POST,
 				entity,
 				responseType
-		).getBody();
+		);
+	}
+
+	private <REQ, RESP> ResponseEntity<RESP> callPutAsResponseEntity(String url, REQ req, ParameterizedTypeReference<RESP> responseType, String accessToken) {
+		Class<RESP> respClass;
+
+		RestTemplate restTemplate = new RestTemplate();
+		HttpHeaders headers = new HttpHeaders();
+		headers.setBearerAuth(accessToken);
+		HttpEntity<REQ> entity = new HttpEntity<>(req, headers);
+		return restTemplate.exchange(
+				params.getAuthServerUrl() + url,
+				HttpMethod.PUT,
+				entity,
+				responseType
+		);
 	}
 
 	private <RESP> RESP callGet(String url, ParameterizedTypeReference<RESP> responseType) {
@@ -261,6 +279,21 @@ public class KeycloakClient {
 		return restTemplate.exchange(
 				params.getAuthServerUrl() + url,
 				HttpMethod.GET,
+				entity,
+				responseType
+		);
+	}
+
+	private <RESP> ResponseEntity<RESP> callDeleteAsResponseEntity(String url, ParameterizedTypeReference<RESP> responseType, String accessToken) {
+		Class<RESP> respClass;
+
+		RestTemplate restTemplate = new RestTemplate();
+		HttpHeaders headers = new HttpHeaders();
+		headers.setBearerAuth(accessToken);
+		HttpEntity<String> entity = new HttpEntity<>(headers);
+		return restTemplate.exchange(
+				params.getAuthServerUrl() + url,
+				HttpMethod.DELETE,
 				entity,
 				responseType
 		);
@@ -383,14 +416,24 @@ public class KeycloakClient {
 		return callGet(url, new ParameterizedTypeReference<KcGetServiceAccountUserIdResp>() {}, adminAccessToken);
 	}
 
-	public void assignClientRoleToUser(String userId, String clientUuid, KcAssignClientRoleToUserReqRow[] req, String adminAccessToken) {
+	public void assignClientRoleToUser(String userId, String clientUuid, KcAssignRoleToUserReqRow[] req, String adminAccessToken) {
 		String url = String.format("/admin/realms/%s/users/%s/role-mappings/clients/%s", params.getKcRealm(), userId, clientUuid);
 		callPost(url, req, new ParameterizedTypeReference<Void>() {}, adminAccessToken);
 	}
 
-	public KcGetAvailableRolesForUserRespRow[] getAvailableRolesForUser(String userId, String adminAccessToken, String search) {
+	public void assignRealmRoleToUser(String realm, String userId, KcAssignRoleToUserReqRow[] req, String adminAccessToken) {
+		String url = String.format("/admin/realms/%s/users/%s/role-mappings/realm", realm, userId);
+		callPost(url, req, new ParameterizedTypeReference<Void>() {}, adminAccessToken);
+	}
+
+	public KcGetAvailableClientRolesForUserRespRow[] getAvailableClientRolesForUser(String userId, String adminAccessToken, String search) {
 		String url = String.format("/admin/realms/%s/ui-ext/available-roles/users/%s?search=%s", params.getKcRealm(), userId, search);
-		return callGet(url, new ParameterizedTypeReference<KcGetAvailableRolesForUserRespRow[]>() {}, adminAccessToken);
+		return callGet(url, new ParameterizedTypeReference<KcGetAvailableClientRolesForUserRespRow[]>() {}, adminAccessToken);
+	}
+
+	public KcGetAvailableRealmRolesForUserRespRow[] getAvailableRealmRolesForUser(String realm, String userId, String adminAccessToken, String search) {
+		String url = String.format("/admin/realms/%s/users/%s/role-mappings/realm/available?search=%s", realm, userId, search);
+		return callGet(url, new ParameterizedTypeReference<KcGetAvailableRealmRolesForUserRespRow[]>() {}, adminAccessToken);
 	}
 
 	public KcGetPolicyResp getPolicyByName(String clientUuid, String policyName, String adminAccessToken) {
@@ -446,6 +489,31 @@ public class KeycloakClient {
 		} else {
 			throw new InternalErrorException("Unexpected situation in getting permission. result length is negative!", null);
 		}
+	}
+
+	public String createAdminUser(KcCreateUserReq req, String adminAccessToken) {
+		String url = String.format("/admin/realms/master/users");
+		ResponseEntity<Void> resp = callPostAsResponseEntity(url, req, new ParameterizedTypeReference<Void>() {},
+				adminAccessToken);
+
+		URI location = resp.getHeaders().getLocation();
+		String[] locationPathParts = location.getPath().split("/");
+		return locationPathParts[locationPathParts.length - 1];
+	}
+
+	public void resetAdminPassword(String userId, KcResetPasswordReq req, String adminAccessToken) {
+		String url = String.format("/admin/realms/master/users/%s/reset-password", userId);
+		callPutAsResponseEntity(url, req, new ParameterizedTypeReference<Void>() {}, adminAccessToken);
+	}
+
+	public void deleteUser(String realm, String userId, String adminAccessToken) {
+		String url = String.format("/admin/realms/%s/users/%s", realm, userId);
+		callDeleteAsResponseEntity(url, new ParameterizedTypeReference<Void>() {}, adminAccessToken);
+	}
+
+	public KcSearchUserRespRow[] searchUsers(String username, String adminAccessToken) {
+		String url = String.format("/admin/realms/master/ui-ext/brute-force-user?briefRepresentation=true&search=%s", username);
+		return callGet(url, new ParameterizedTypeReference<KcSearchUserRespRow[]>() {}, adminAccessToken);
 	}
 
 

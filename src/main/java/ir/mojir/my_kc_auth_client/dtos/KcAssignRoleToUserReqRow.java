@@ -1,6 +1,6 @@
 package ir.mojir.my_kc_auth_client.dtos;
 
-public class KcAssignClientRoleToUserReqRow {
+public class KcAssignRoleToUserReqRow {
     private String id;
 
     private String name;
