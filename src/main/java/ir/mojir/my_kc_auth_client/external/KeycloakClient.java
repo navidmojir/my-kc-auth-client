@@ -84,6 +84,7 @@ public class KeycloakClient {
 	}
 
 	private void getAccessTokenForClient() {
+		//here I should check expiration time of token and renew only if needed
 //		if(clientAccessToken != null)
 //			return;
 
@@ -436,9 +437,10 @@ public class KeycloakClient {
 		return callGet(url, new ParameterizedTypeReference<KcGetAvailableRealmRolesForUserRespRow[]>() {}, adminAccessToken);
 	}
 
-	public KcGetPolicyResp getPolicyByName(String clientUuid, String policyName, String adminAccessToken) {
+	public KcGetPolicyResp getPolicyByName(String clientUuid, String policyName) {
+		getAccessTokenForClient();
 		String url = String.format("/admin/realms/sts/clients/%s/authz/resource-server/policy?name=%s", clientUuid, policyName);
-		KcGetPolicyResp[] result = callGet(url, new ParameterizedTypeReference<KcGetPolicyResp[]>() {}, adminAccessToken);
+		KcGetPolicyResp[] result = callGet(url, new ParameterizedTypeReference<KcGetPolicyResp[]>() {}, clientAccessToken);
 
 		if(result == null || result.length != 1)
 			return null;
@@ -447,8 +449,9 @@ public class KeycloakClient {
 
 	//This method became dirty because I had some challenges with paths like /tickets/{id}
 	//The error was: Not enough variable values available to expand 'id'
-	public KcGetPermissionResp getPermissionByName(String clientUuid, String permissionName, String adminAccessToken) {
+	public KcGetPermissionResp getPermissionByName(String clientUuid, String permissionName) {
 //		String encodedPermissionName = permissionName.replace("{", "%7B").replace("}", "%7D");
+		getAccessTokenForClient();
 		String encodedPermissionName = null;
 		try {
 			encodedPermissionName = URLEncoder.encode(permissionName, StandardCharsets.UTF_8.toString());
@@ -467,7 +470,7 @@ public class KeycloakClient {
 
 		RestTemplate restTemplate = new RestTemplate();
 		HttpHeaders headers = new HttpHeaders();
-		headers.setBearerAuth(adminAccessToken);
+		headers.setBearerAuth(clientAccessToken);
 		HttpEntity<String> entity = new HttpEntity<>(headers);
 		KcGetPermissionResp[] result = restTemplate.exchange(
 				uri,
