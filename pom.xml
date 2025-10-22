@@ -19,7 +19,7 @@
 		<dependency>
 			<groupId>ir.mojir</groupId>
 			<artifactId>my-spring-boot-commons</artifactId>
-			<version>0.0.16</version>
+			<version>0.0.17</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.tomcat.embed</groupId>

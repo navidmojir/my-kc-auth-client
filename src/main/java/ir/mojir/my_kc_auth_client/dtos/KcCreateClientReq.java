@@ -13,6 +13,12 @@ public class KcCreateClientReq {
     private boolean standardFlowEnabled;
 
     private boolean authorizationServicesEnabled;
+    
+    private String rootUrl;
+    
+    private String[] redirectUris;
+    
+    private String[] webOrigins;
 
     public String getClientId() {
         return clientId;
@@ -77,4 +83,30 @@ public class KcCreateClientReq {
     public void setAuthorizationServicesEnabled(boolean authorizationServicesEnabled) {
         this.authorizationServicesEnabled = authorizationServicesEnabled;
     }
+
+	public String getRootUrl() {
+		return rootUrl;
+	}
+
+	public void setRootUrl(String rootUrl) {
+		this.rootUrl = rootUrl;
+	}
+
+	public String[] getRedirectUris() {
+		return redirectUris;
+	}
+
+	public void setRedirectUris(String[] redirectUris) {
+		this.redirectUris = redirectUris;
+	}
+
+	public String[] getWebOrigins() {
+		return webOrigins;
+	}
+
+	public void setWebOrigins(String[] webOrigins) {
+		this.webOrigins = webOrigins;
+	}
+    
+    
 }

@@ -482,7 +482,11 @@ public class KeycloakClient {
 		if(result == null || result.length == 0)
 			return null;
 		else if(result.length == 1)
-			return result[0];
+		{
+			if(result[0].getName().equals(permissionName))
+				return result[0];
+			return null;
+		}
 		else if(result.length > 1) {
 			for (KcGetPermissionResp p : result) {
 				if (p.getName().equals(permissionName))
@@ -494,8 +498,8 @@ public class KeycloakClient {
 		}
 	}
 
-	public String createAdminUser(KcCreateUserReq req, String adminAccessToken) {
-		String url = String.format("/admin/realms/master/users");
+	public String createUser(String realm, KcCreateUserReq req, String adminAccessToken) {
+		String url = String.format("/admin/realms/%s/users", realm);
 		ResponseEntity<Void> resp = callPostAsResponseEntity(url, req, new ParameterizedTypeReference<Void>() {},
 				adminAccessToken);
 
@@ -504,8 +508,8 @@ public class KeycloakClient {
 		return locationPathParts[locationPathParts.length - 1];
 	}
 
-	public void resetAdminPassword(String userId, KcResetPasswordReq req, String adminAccessToken) {
-		String url = String.format("/admin/realms/master/users/%s/reset-password", userId);
+	public void resetAdminPassword(String realm, String userId, KcResetPasswordReq req, String adminAccessToken) {
+		String url = String.format("/admin/realms/%s/users/%s/reset-password", realm, userId);
 		callPutAsResponseEntity(url, req, new ParameterizedTypeReference<Void>() {}, adminAccessToken);
 	}
 
