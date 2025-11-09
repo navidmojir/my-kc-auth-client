@@ -65,8 +65,8 @@ public class KcInitializer {
     private String[] defaultAdminRoles;
     private String[] allRoles;
 
-    @PostConstruct
-    private void init() {
+//    @PostConstruct
+    public void init() {
         logger.info("Trying to configure keycloak at url {} with realm name {}", kcConfig.getAuthServerUrl(),
                 kcConfig.getKcRealm());
         adminAccessToken = fetchAdminAccessToken();
@@ -262,6 +262,10 @@ public class KcInitializer {
 //            wuiClientId = "sts-wui";
 //        else
         String wuiClientId = kcConfig.getWuiClientId();
+        if(Validations.isBlank(wuiClientId)){
+            logger.info("Skipping creating wui client. Because its id is not configured.");
+            return;
+        }
         KcCreateClientReq req = new KcCreateClientReq();
         req.setClientId(wuiClientId);
         req.setEnabled(true);
@@ -311,7 +315,7 @@ public class KcInitializer {
         logger.info("Realm created successfully");
     }
 
-    public boolean isRealmExists() {
+    private boolean isRealmExists() {
         logger.trace("Checking if realm exists");
         return keycloakClient.isRealmExists(kcConfig.getKcRealm(), adminAccessToken);
     }
