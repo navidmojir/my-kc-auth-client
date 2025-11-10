@@ -458,7 +458,8 @@ public class KeycloakClient {
 		} catch (UnsupportedEncodingException e) {
 			throw new InternalErrorException("Failed to encode permission name with value " + permissionName, e);
 		}
-		String url = String.format("/admin/realms/sts/clients/%s/authz/resource-server/permission?name=%s", clientUuid, encodedPermissionName);
+		String url = String.format("/admin/realms/%s/clients/%s/authz/resource-server/permission?name=%s",
+				params.getKcRealm(), clientUuid, encodedPermissionName);
 
 
 		URI uri = null;
@@ -518,11 +519,20 @@ public class KeycloakClient {
 		callDeleteAsResponseEntity(url, new ParameterizedTypeReference<Void>() {}, adminAccessToken);
 	}
 
-	public KcSearchUserRespRow[] searchUsers(String username, String adminAccessToken) {
-		String url = String.format("/admin/realms/master/ui-ext/brute-force-user?briefRepresentation=true&search=%s", username);
+	public KcSearchUserRespRow[] searchUsers(String username, String realm, String adminAccessToken) {
+		String url = String.format("/admin/realms/%s/ui-ext/brute-force-user?briefRepresentation=true&search=%s", realm, username);
 		return callGet(url, new ParameterizedTypeReference<KcSearchUserRespRow[]>() {}, adminAccessToken);
 	}
 
-
+	public boolean isUserExists(String username, String realm, String adminAccessToken) {
+		KcSearchUserRespRow[] result = searchUsers(username ,realm, adminAccessToken);
+		if(result == null || result.length == 0)
+			return false;
+		for(KcSearchUserRespRow row: result) {
+			if(row.getUsername().equals(username))
+				return true;
+		}
+		return false;
+	}
 
 }

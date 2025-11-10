@@ -57,6 +57,9 @@ public class KeycloakConfiguration {
     @Value("${kc.stsAdminPassword:stsadmin}")
     private String stsAdminPassword;
 
+    @Value("${kc.initializeKcAdminUser:true}")
+    private boolean initializeKcAdminUser;
+
     public String getKcRealm() {
         return kcRealm;
     }
@@ -133,8 +136,8 @@ public class KeycloakConfiguration {
 	public String getStsAdminPassword() {
 		return stsAdminPassword;
 	}
-	
-	
-    
-    
+
+    public boolean isInitializeKcAdminUser() {
+        return initializeKcAdminUser;
+    }
 }

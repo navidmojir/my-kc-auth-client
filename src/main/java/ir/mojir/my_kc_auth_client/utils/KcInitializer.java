@@ -77,8 +77,10 @@ public class KcInitializer {
             assignNeededRolesToApiClient();
             createRolesInKeycloak();
             createUser();
-            createAdminUser();
-            removeTmpAdminUser();
+            if(kcConfig.isInitializeKcAdminUser()) {
+                createAdminUser();
+                removeTmpAdminUser();
+            }
         }
 
         createAllResources();
@@ -87,11 +89,15 @@ public class KcInitializer {
     }
 
     private void createUser() {
+        if(keycloakClient.isUserExists(kcConfig.getStsAdminUsername(), kcConfig.getKcRealm(), adminAccessToken)) {
+            logger.trace("User with name {} already exists. So skipping user creation.", kcConfig.getStsAdminUsername());
+            return;
+        }
     	KcCreateUserReq req = new KcCreateUserReq();
         req.setUsername(kcConfig.getStsAdminUsername());
         req.setEnabled(true);
         String userId = keycloakClient.createUser(kcConfig.getKcRealm(), req, adminAccessToken);
-        logger.info("user {} was created on keycloak.", kcConfig.getAdminUsername());
+        logger.info("user {} was created on keycloak.", kcConfig.getStsAdminUsername());
 
         KcResetPasswordReq resetReq = new KcResetPasswordReq();
         resetReq.setTemporary(false);
@@ -134,7 +140,7 @@ public class KcInitializer {
         String newAdminAccessToken = keycloakClient.getAdminAccessToken(kcConfig.getAdminUsername(), kcConfig.getAdminPassword());
 
         logger.trace("Trying to find temp admin user with username {}", kcConfig.getTmpAdminUsername());
-        KcSearchUserRespRow[] result = keycloakClient.searchUsers(kcConfig.getTmpAdminUsername(), newAdminAccessToken);
+        KcSearchUserRespRow[] result = keycloakClient.searchUsers(kcConfig.getTmpAdminUsername(), "master", newAdminAccessToken);
         if(result == null || result.length == 0)
             throw new InternalErrorException("Failed to find temp admin user: " + kcConfig.getTmpAdminUsername(), null);
         String tmpAdminUserId = "";
