@@ -83,7 +83,7 @@ public class KeycloakClient {
 				uriVariables).getBody();
 	}
 
-	private void getAccessTokenForClient() {
+	public String getAccessTokenForClient() {
 		//here I should check expiration time of token and renew only if needed
 //		if(clientAccessToken != null)
 //			return;
@@ -105,6 +105,7 @@ public class KeycloakClient {
 				params.getKcRealm()	+ "/protocol/openid-connect/token", requestEntity, KcAccessTokenResp.class);
 
 		clientAccessToken = resp.getAccess_token();
+		return clientAccessToken;
 	}
 
 	public String getAdminAccessToken(String adminUserName, String adminPassword) {
@@ -439,7 +440,8 @@ public class KeycloakClient {
 
 	public KcGetPolicyResp getPolicyByName(String clientUuid, String policyName) {
 		getAccessTokenForClient();
-		String url = String.format("/admin/realms/sts/clients/%s/authz/resource-server/policy?name=%s", clientUuid, policyName);
+		String url = String.format("/admin/realms/%s/clients/%s/authz/resource-server/policy?name=%s",
+				params.getKcRealm(), clientUuid, policyName);
 		KcGetPolicyResp[] result = callGet(url, new ParameterizedTypeReference<KcGetPolicyResp[]>() {}, clientAccessToken);
 
 		if(result == null || result.length != 1)
