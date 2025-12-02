@@ -140,4 +140,14 @@ public class KeycloakConfiguration {
     public boolean isInitializeKcAdminUser() {
         return initializeKcAdminUser;
     }
+
+	public void setKcRealm(String kcRealm) {
+		this.kcRealm = kcRealm;
+	}
+
+	public void setAuthServerUrl(String authServerUrl) {
+		this.authServerUrl = authServerUrl;
+	}
+    
+    
 }
