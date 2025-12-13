@@ -196,4 +196,7 @@ public class KeycloakConfiguration {
         this.authServerUrl = authServerUrl;
     }
 
+    public boolean isInitializeKcAdminUser() {
+        return initializeKcAdminUser;
+    }
 }
