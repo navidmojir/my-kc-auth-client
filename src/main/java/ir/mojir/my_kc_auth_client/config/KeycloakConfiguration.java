@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 
+import ir.mojir.my_kc_auth_client.dtos.InitializationResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -60,6 +61,16 @@ public class KeycloakConfiguration {
     @Value("${kc.initializeKcAdminUser:true}")
     private boolean initializeKcAdminUser;
 
+    @Value("${kc.initializeRealmAndClients:false}")
+    private boolean initializeRealmAndClients;
+
+    @Value("${kc.externalConfigFilePath:}")
+    private String externalConfigFilePath;
+
+    public String getExternalConfigFilePath() {
+        return externalConfigFilePath;
+    }
+
     public String getKcRealm() {
         return kcRealm;
     }
@@ -73,13 +84,20 @@ public class KeycloakConfiguration {
     }
 
     public String getClientSecret() {
-        loadClientUuidAndSecretFromFileIfExists();
+        loadClientUuidAndSecretFromFile();
         return clientSecret;
     }
 
     public String getClientUuid() {
-        loadClientUuidAndSecretFromFileIfExists();
+        loadClientUuidAndSecretFromFile();
         return clientUuid;
+    }
+
+    private void loadClientUuidAndSecretFromFile() {
+        if(!Validations.isBlank(getExternalConfigFilePath()))
+            loadClientUuidAndSecretFromExternalFile();
+        else
+            loadClientUuidAndSecretFromLocalFile();
     }
 
     public String getTmpAdminUsername() {
@@ -97,7 +115,7 @@ public class KeycloakConfiguration {
     /**
      * If a file with FILE_PATH exists, It's priority is higher than application properties
      */
-    private void loadClientUuidAndSecretFromFileIfExists() {
+    private void loadClientUuidAndSecretFromLocalFile() {
         if(!Validations.isBlank(clientUuid) && !Validations.isBlank(clientSecret)) {
             return;
         }
@@ -114,6 +132,35 @@ public class KeycloakConfiguration {
             logger.info("Client UUID and Secret was loaded from file");
         } catch (IOException e) {
             logger.info("Failed to load client uuid and secret from file {}. So falling back to application properties", FILE_PATH, e);
+        }
+    }
+
+    private void loadClientUuidAndSecretFromExternalFile() {
+        if(!Validations.isBlank(clientUuid) && !Validations.isBlank(clientSecret)) {
+            return;
+        }
+        File file = new File(getExternalConfigFilePath());
+        if (!file.exists()) {
+            logger.info("File {} does not exists.", FILE_PATH);
+            return;
+        }
+
+        try {
+            InitializationResult result = new ObjectMapper().readValue(file, InitializationResult.class);
+            for(InitializationResult.ClientCreationResult clientInfo: result.getCreatedClients()) {
+                logger.info(clientInfo.getClientId());
+                if(clientInfo.getClientId().equals(getClientId())) {
+                    clientUuid = clientInfo.getClientUuid();
+                    clientSecret = clientInfo.getClientSecret();
+                    logger.info("Client UUID and Secret was loaded from external file {}", getExternalConfigFilePath());
+                    return;
+                }
+            }
+            throw new RuntimeException(String.format("Failed to load client uuid and secret from external file %s because no matching client id (%s) found",
+                    getExternalConfigFilePath(), getClientId()));
+        } catch (IOException e) {
+            logger.info("IOException occured while reading value from file {}. So falling back to application properties",
+                    getExternalConfigFilePath(), e);
         }
     }
 
@@ -137,17 +184,16 @@ public class KeycloakConfiguration {
 		return stsAdminPassword;
 	}
 
-    public boolean isInitializeKcAdminUser() {
-        return initializeKcAdminUser;
+    public boolean isInitializeRealmAndClients() {
+        return initializeRealmAndClients;
     }
 
-	public void setKcRealm(String kcRealm) {
-		this.kcRealm = kcRealm;
-	}
+    public void setKcRealm(String kcRealm) {
+        this.kcRealm = kcRealm;
+    }
 
-	public void setAuthServerUrl(String authServerUrl) {
-		this.authServerUrl = authServerUrl;
-	}
-    
-    
+    public void setAuthServerUrl(String authServerUrl) {
+        this.authServerUrl = authServerUrl;
+    }
+
 }

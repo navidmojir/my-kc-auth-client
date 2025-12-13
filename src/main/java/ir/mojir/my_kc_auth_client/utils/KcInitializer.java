@@ -38,7 +38,6 @@ import ir.mojir.my_kc_auth_client.logic.ClientResourcesCache;
 import ir.mojir.my_kc_auth_client.logic.KeycloakResourceManager;
 import ir.mojir.spring_boot_commons.exceptions.InternalErrorException;
 import ir.mojir.spring_boot_commons.helpers.Validations;
-import jakarta.annotation.PostConstruct;
 
 @Component
 public class KcInitializer {
@@ -69,17 +68,20 @@ public class KcInitializer {
     public void init() {
         logger.info("Trying to configure keycloak at url {} with realm name {}", kcConfig.getAuthServerUrl(),
                 kcConfig.getKcRealm());
-        adminAccessToken = fetchAdminAccessToken();
-        if(!Validations.isBlank(adminAccessToken)) {
-            createRealm();
-            createApiClient();
-            createWuiClient();
-            assignNeededRolesToApiClient();
-            createRolesInKeycloak();
-            createUser();
-            if(kcConfig.isInitializeKcAdminUser()) {
-                createAdminUser();
-                removeTmpAdminUser();
+        if(kcConfig.isInitializeRealmAndClients()) {
+            logger.info("initializing realm and clients");
+            adminAccessToken = fetchAdminAccessToken();
+            if (!Validations.isBlank(adminAccessToken)) {
+                createRealm();
+                createApiClient();
+                createWuiClient();
+                assignNeededRolesToApiClient();
+                createClientRolesInKeycloak();
+                createUser();
+                if (kcConfig.isInitializeKcAdminUser()) {
+                    createAdminUser();
+                    removeTmpAdminUser();
+                }
             }
         }
 
@@ -399,7 +401,7 @@ public class KcInitializer {
         return keycloakClient.getClientRoleDetails(roleName).getId();
     }
 
-    private void createRolesInKeycloak() {
+    private void createClientRolesInKeycloak() {
         logger.trace("Trying to create client roles if not exists");
         KcSearchClientRoleRespRow[] clientRoles = keycloakClient.getAllClientRoles();
         for(String role: allRoles) {

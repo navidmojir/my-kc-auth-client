@@ -5,6 +5,8 @@ public class KcGetAvailableClientRolesForUserRespRow {
     private String clientId;
 
     private String role;
+
+    private String client;
     public String getId() {
         return id;
     }
@@ -27,5 +29,13 @@ public class KcGetAvailableClientRolesForUserRespRow {
 
     public void setRole(String role) {
         this.role = role;
+    }
+
+    public String getClient() {
+        return client;
+    }
+
+    public void setClient(String client) {
+        this.client = client;
     }
 }

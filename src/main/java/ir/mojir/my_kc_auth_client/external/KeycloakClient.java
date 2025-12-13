@@ -206,23 +206,18 @@ public class KeycloakClient {
 	}*/
 
 	public void createClientRole(KcCreateClientRoleReq req) {
-//		getAccessTokenForClient();
-//
-//		RestTemplate restTemplate = new RestTemplate();
-//		HttpHeaders headers = new HttpHeaders();
-//		headers.setBearerAuth(clientAccessToken);
-//		HttpEntity<KcCreateClientRoleReq> entity = new HttpEntity<>(req, headers);
-//		restTemplate.exchange(
-//				params.getAuthServerUrl() + "/admin/realms/" + params.getKcRealm()
-//						+ "/clients/" + clientUuid + "/roles",
-//				HttpMethod.POST,
-//				entity,
-//				Void.class
-//		);
-		String url = String.format("/admin/realms/%s/clients/%s/roles",
-				params.getKcRealm(), params.getClientUuid());
+		createClientRole(params.getClientUuid(), req);
+	}
 
-		callPost(url, req, new ParameterizedTypeReference<Void>() {});
+	public void createClientRole(String clientUuid, KcCreateClientRoleReq req) {
+		getAccessTokenForClient();
+		createClientRole(clientUuid, req, clientAccessToken);
+	}
+
+	public void createClientRole(String clientUuid, KcCreateClientRoleReq req, String accessToken) {
+		String url = String.format("/admin/realms/%s/clients/%s/roles",
+				params.getKcRealm(), clientUuid);
+		callPost(url, req, new ParameterizedTypeReference<Void>() {}, accessToken);
 	}
 
 	private <REQ, RESP> RESP callPost(String url, REQ req, ParameterizedTypeReference<RESP> responseType) {
@@ -304,37 +299,20 @@ public class KeycloakClient {
 
 
 	public KcSearchClientRoleRespRow[] getAllClientRoles() {
-//		getAccessTokenForClient();
-//
-//		RestTemplate restTemplate = new RestTemplate();
-//		HttpHeaders headers = new HttpHeaders();
-//		headers.setBearerAuth(clientAccessToken);
-//		HttpEntity<String> entity = new HttpEntity<>(headers);
-//		return restTemplate.exchange(params.getAuthServerUrl() + "/admin/realms/" + params.getKcRealm()
-//						+ "/clients/" + params.getClientUuid() + "/roles",
-//				HttpMethod.GET,
-//				entity,
-//				KcSearchClientRoleRespRow[].class
-//		).getBody();
+		return getAllClientRoles(params.getClientUuid());
+	}
 
-		String url = String.format("/admin/realms/%s/clients/%s/roles", params.getKcRealm(), params.getClientUuid());
-		return callGet(url, new ParameterizedTypeReference<KcSearchClientRoleRespRow[]>() {});
+	public KcSearchClientRoleRespRow[] getAllClientRoles(String clientUuid) {
+		getAccessTokenForClient();
+		return getAllClientRoles(clientUuid, clientAccessToken);
+	}
+
+	public KcSearchClientRoleRespRow[] getAllClientRoles(String clientUuid, String accessToken) {
+		String url = String.format("/admin/realms/%s/clients/%s/roles", params.getKcRealm(), clientUuid);
+		return callGet(url, new ParameterizedTypeReference<KcSearchClientRoleRespRow[]>() {}, accessToken);
 	}
 
 	public KcGetUsersInClientRoleRespRow[] getUsersInClientRole(String roleName) {
-//		getAccessTokenForClient();
-//
-//		RestTemplate restTemplate = new RestTemplate();
-//		HttpHeaders headers = new HttpHeaders();
-//		headers.setBearerAuth(clientAccessToken);
-//		HttpEntity<String> entity = new HttpEntity<>(headers);
-//		return restTemplate.exchange(params.getAuthServerUrl() + "/admin/realms/" + params.getKcRealm()
-//						+ "/clients/" + clientUuid + "/roles/" + roleName + "/users",
-//				HttpMethod.GET,
-//				entity,
-//				KcGetUsersInClientRoleRespRow[].class
-//		).getBody();
-
 		String url = String.format("/admin/realms/%s/clients/%s/roles/%s/users",
 				params.getKcRealm(), params.getClientUuid(), roleName);
 		return callGet(url, new ParameterizedTypeReference<KcGetUsersInClientRoleRespRow[]>() {});
