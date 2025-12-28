@@ -5,30 +5,62 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-import ir.mojir.my_kc_auth_client.config.KeycloakConfiguration;
-import ir.mojir.my_kc_auth_client.dtos.*;
-import ir.mojir.my_kc_auth_client.logic.ClientResourcesCache;
-import ir.mojir.spring_boot_commons.exceptions.InternalErrorException;
-import ir.mojir.spring_boot_commons.exceptions.UnauthorizedException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import ir.mojir.my_kc_auth_client.exceptions.KeycloakAuthorizationClientException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import ir.mojir.my_kc_auth_client.config.KeycloakConfiguration;
+import ir.mojir.my_kc_auth_client.dtos.KcAccessTokenResp;
+import ir.mojir.my_kc_auth_client.dtos.KcAssignRoleToUserReqRow;
+import ir.mojir.my_kc_auth_client.dtos.KcAuthorizeResp;
+import ir.mojir.my_kc_auth_client.dtos.KcCreateAuthorizationPolicyReq;
+import ir.mojir.my_kc_auth_client.dtos.KcCreateClientReq;
+import ir.mojir.my_kc_auth_client.dtos.KcCreateClientRoleReq;
+import ir.mojir.my_kc_auth_client.dtos.KcCreatePermissionReq;
+import ir.mojir.my_kc_auth_client.dtos.KcCreateRealmReq;
+import ir.mojir.my_kc_auth_client.dtos.KcCreateResourceReq;
+import ir.mojir.my_kc_auth_client.dtos.KcCreateResourceResp;
+import ir.mojir.my_kc_auth_client.dtos.KcCreateUserReq;
+import ir.mojir.my_kc_auth_client.dtos.KcFetchClientSecretResp;
+import ir.mojir.my_kc_auth_client.dtos.KcGetAllClientAuthorizationPoliciesRespRow;
+import ir.mojir.my_kc_auth_client.dtos.KcGetAvailableClientRolesForUserRespRow;
+import ir.mojir.my_kc_auth_client.dtos.KcGetAvailableRealmRolesForUserRespRow;
+import ir.mojir.my_kc_auth_client.dtos.KcGetClientResp;
+import ir.mojir.my_kc_auth_client.dtos.KcGetClientRoleDetailsResp;
+import ir.mojir.my_kc_auth_client.dtos.KcGetPermissionResp;
+import ir.mojir.my_kc_auth_client.dtos.KcGetPolicyResp;
+import ir.mojir.my_kc_auth_client.dtos.KcGetServiceAccountUserIdResp;
+import ir.mojir.my_kc_auth_client.dtos.KcGetUsersInClientRoleRespRow;
+import ir.mojir.my_kc_auth_client.dtos.KcResetPasswordReq;
+import ir.mojir.my_kc_auth_client.dtos.KcScope;
+import ir.mojir.my_kc_auth_client.dtos.KcSearchClientRoleRespRow;
+import ir.mojir.my_kc_auth_client.dtos.KcSearchUserRespRow;
+import ir.mojir.my_kc_auth_client.dtos.KcUserDetails;
+import ir.mojir.my_kc_auth_client.exceptions.KeycloakAuthorizationClientException;
+import ir.mojir.my_kc_auth_client.logic.ClientResourcesCache;
+import ir.mojir.spring_boot_commons.exceptions.InternalErrorException;
+import ir.mojir.spring_boot_commons.exceptions.UnauthorizedException;
+
 @Component
 public class KeycloakClient {
 
-	private final static Logger logger = LoggerFactory.getLogger(KeycloakClient.class);
+//	private final static Logger logger = LoggerFactory.getLogger(KeycloakClient.class);
 
 	@Autowired
 	private KeycloakConfiguration params;
@@ -229,7 +261,7 @@ public class KeycloakClient {
 		return callPostAsResponseEntity(url, req, responseType, accessToken).getBody();
 	}
 	private <REQ, RESP> ResponseEntity<RESP> callPostAsResponseEntity(String url, REQ req, ParameterizedTypeReference<RESP> responseType, String accessToken) {
-		Class<RESP> respClass;
+//		Class<RESP> respClass;
 
 		RestTemplate restTemplate = new RestTemplate();
 		HttpHeaders headers = new HttpHeaders();
@@ -244,7 +276,7 @@ public class KeycloakClient {
 	}
 
 	private <REQ, RESP> ResponseEntity<RESP> callPutAsResponseEntity(String url, REQ req, ParameterizedTypeReference<RESP> responseType, String accessToken) {
-		Class<RESP> respClass;
+//		Class<RESP> respClass;
 
 		RestTemplate restTemplate = new RestTemplate();
 		HttpHeaders headers = new HttpHeaders();
@@ -267,7 +299,7 @@ public class KeycloakClient {
 	}
 
 	private <RESP> ResponseEntity<RESP> callGetAsResponseEntity(String url, ParameterizedTypeReference<RESP> responseType, String accessToken) {
-		Class<RESP> respClass;
+//		Class<RESP> respClass;
 
 		RestTemplate restTemplate = new RestTemplate();
 		HttpHeaders headers = new HttpHeaders();
@@ -282,7 +314,7 @@ public class KeycloakClient {
 	}
 
 	private <RESP> ResponseEntity<RESP> callDeleteAsResponseEntity(String url, ParameterizedTypeReference<RESP> responseType, String accessToken) {
-		Class<RESP> respClass;
+//		Class<RESP> respClass;
 
 		RestTemplate restTemplate = new RestTemplate();
 		HttpHeaders headers = new HttpHeaders();
@@ -513,6 +545,21 @@ public class KeycloakClient {
 				return true;
 		}
 		return false;
+	}
+	
+	public KcAccessTokenResp getAccessTokenWithClientCredentials(String authServerUrl, String realm, String clientId, String clientSecret) {
+		RestTemplate restTemplate = new RestTemplate();
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+		MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
+		map.add("grant_type", "client_credentials");
+		map.add("client_id", clientId);
+		map.add("client_secret", clientSecret);
+		HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(map, headers);
+		return restTemplate
+			.postForEntity(authServerUrl + "/realms/"+realm+"/protocol/openid-connect/token", entity,
+					KcAccessTokenResp.class)
+			.getBody();
 	}
 
 }
