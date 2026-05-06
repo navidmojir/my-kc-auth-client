@@ -141,7 +141,7 @@ public class KeycloakConfiguration {
         }
         File file = new File(getExternalConfigFilePath());
         if (!file.exists()) {
-            logger.info("File {} does not exists.", FILE_PATH);
+            logger.info("File {} does not exists.", getExternalConfigFilePath());
             return;
         }
 
