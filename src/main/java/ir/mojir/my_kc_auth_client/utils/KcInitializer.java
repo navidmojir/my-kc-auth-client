@@ -375,16 +375,23 @@ public class KcInitializer {
         logger.trace("Trying to create policies in keycloak");
         KcGetAllClientAuthorizationPoliciesRespRow[] currentPolicies = keycloakClient.getAllClientAuthorizationPolicies();
         for(String role: allRoles) {
-            if(isPolicyExist(currentPolicies, role))
+            if(isPolicyExist(currentPolicies, role)) {
+            	logger.info("Policy for role {} exists for client {}", role, kcConfig.getClientId());
                 continue;
-            KcCreateAuthorizationPolicyReq req = new KcCreateAuthorizationPolicyReq();
-            req.setName("role="+role);
-            KcCreateAuthorizationPolicyReq.Role reqRole = new KcCreateAuthorizationPolicyReq.Role();
-            reqRole.setId(getRoleId(role));
-            reqRole.setRequired(false);
-            req.setRoles(Collections.singletonList(reqRole));
-            keycloakClient.createAuthorizationPolicy(req);
-            logger.info("Authorization policy with name {} was created", req.getName());
+            }
+            try {
+	            KcCreateAuthorizationPolicyReq req = new KcCreateAuthorizationPolicyReq();
+	            req.setName("role="+role);
+	            KcCreateAuthorizationPolicyReq.Role reqRole = new KcCreateAuthorizationPolicyReq.Role();
+	            reqRole.setId(getRoleId(role));
+	            reqRole.setRequired(false);
+	            req.setRoles(Collections.singletonList(reqRole));
+	            keycloakClient.createAuthorizationPolicy(req);
+	            logger.info("Authorization policy with name {} was created", req.getName());
+            } catch(Exception e) {
+            	logger.error("Failed to add authorization policy for {}", role);
+            	logger.debug("Trace of error is:", e);
+            }
         }
 
     }
