@@ -357,6 +357,10 @@ public class KcInitializer {
         String[] allowedRoles = roleResolver.getAllowedRoles(method, path);
         for(String role: allowedRoles) {
             KcGetPolicyResp policy = keycloakClient.getPolicyByName(kcConfig.getClientUuid(), "role=" + role);
+            if(policy == null) {
+            	logger.warn("Failed to add policy for role {} on permission with method {} and path {}", role, method, path);
+            	continue;
+            }
             result.add(policy.getId());
         }
         return result.toArray(new String[0]);
@@ -389,7 +393,7 @@ public class KcInitializer {
 	            keycloakClient.createAuthorizationPolicy(req);
 	            logger.info("Authorization policy with name {} was created", req.getName());
             } catch(Exception e) {
-            	logger.error("Failed to add authorization policy for {}", role);
+            	logger.warn("Failed to add authorization policy for {}", role);
             	logger.debug("Trace of error is:", e);
             }
         }
