@@ -454,8 +454,15 @@ public class KeycloakClient {
 				params.getKcRealm(), clientUuid, policyName);
 		KcGetPolicyResp[] result = callGet(url, new ParameterizedTypeReference<KcGetPolicyResp[]>() {}, clientAccessToken);
 
-		if(result == null || result.length != 1)
+		if(result == null || result.length == 0)
 			return null;
+		if(result.length > 1) {
+			for(KcGetPolicyResp r: result) {
+				if(r.getName().equals(policyName))
+					return r;
+			}
+			throw new InternalErrorException("While searching for policy with name " + policyName + " in keycloak, the result was unrelated!", null);
+		}
 		return result[0];
 	}
 

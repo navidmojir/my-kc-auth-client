@@ -348,7 +348,7 @@ public class KcInitializer {
             req.setPolicies(policies);
             req.setScopes(new String[]{method});
             keycloakClient.createPermission(req);
-            logger.info("Permission with name {} was created successfully", req.getName());
+            logger.info("Permission with name {} was created successfully. Added policies: {}", req.getName(), req.getPolicies());
         }
     }
 
@@ -356,12 +356,15 @@ public class KcInitializer {
         List<String> result = new ArrayList<>();
         String[] allowedRoles = roleResolver.getAllowedRoles(method, path);
         for(String role: allowedRoles) {
-            KcGetPolicyResp policy = keycloakClient.getPolicyByName(kcConfig.getClientUuid(), "role=" + role);
+        	String policyName = "role=" + role;
+            KcGetPolicyResp policy = keycloakClient.getPolicyByName(kcConfig.getClientUuid(), policyName);
             if(policy == null) {
             	logger.warn("Failed to add policy for role {} on permission with method {} and path {}", role, method, path);
             	continue;
             }
             result.add(policy.getId());
+            logger.info("Policy with name {} was added to perm creation req for method {} and path {}",
+            		policyName, method, path);
         }
         return result.toArray(new String[0]);
 

@@ -9,4 +9,6 @@ import java.lang.annotation.Target;
 @Target(ElementType.METHOD)
 public @interface AllowedRoles {
     public String[] roles() default {};
+    
+    String rolesProvider() default "";
 }
